@@ -144,7 +144,8 @@ class RaspaConvergeWorkChain(WorkChain):
         spec.output('retrieved_parent_folder', valid_type=FolderData)
         spec.output('component_0', valid_type=ParameterData)
         spec.output('output_parameters', valid_type=ParameterData)
-        
+
+        spec.output('RadialDistributionFunctions', valid_type=FolderData)
 
     def setup(self):
         """Perform initial setup"""
@@ -153,6 +154,17 @@ class RaspaConvergeWorkChain(WorkChain):
         self.ctx.structure = self.inputs.structure
 
         self.ctx.parameters = self.inputs.parameters.get_dict()
+
+        self.ctx.settings = None
+
+        # ToDo: this is not really elegant, optimize it.
+        if 'ComputeRDF' in self.ctx.parameters['GeneralSettings'].keys():
+            if self.ctx.parameters['GeneralSettings']['ComputeRDF'] in ['yes', 'YES', 'Yes']:
+                self.ctx.settings = ParameterData(
+                dict={
+                    'additional_retrieve_list':
+                    ['RadialDistributionFunctions/System_0/*'],
+                })
 
         # restard provided?
         try:
@@ -177,6 +189,7 @@ class RaspaConvergeWorkChain(WorkChain):
             'code': self.inputs.code,
             'structure': self.ctx.structure,
             '_options': self.ctx.options,
+            'settings': self.ctx.settings,
         })
 
         if self.ctx.restart_calc is not None:
