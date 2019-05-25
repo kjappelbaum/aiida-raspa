@@ -145,8 +145,6 @@ class RaspaConvergeWorkChain(WorkChain):
         spec.output('component_0', valid_type=ParameterData)
         spec.output('output_parameters', valid_type=ParameterData)
 
-        spec.output('RadialDistributionFunctions', valid_type=FolderData)
-
     def setup(self):
         """Perform initial setup"""
         self.ctx.done = False
@@ -236,3 +234,5 @@ class RaspaConvergeWorkChain(WorkChain):
         self.out('component_0', self.ctx.calculation['component_0'])
         self.out('output_parameters',
                  self.ctx.calculation['output_parameters'])
+
+

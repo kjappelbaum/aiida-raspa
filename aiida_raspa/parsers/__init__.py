@@ -10,6 +10,11 @@ from aiida.orm.data.parameter import ParameterData
 from aiida_raspa.calculations import RaspaCalculation
 from aiida.parsers.exceptions import OutputParsingError
 
+import os
+from glob import glob
+from pathlib import Path
+import pandas as pd
+
 float_base = float
 
 
@@ -118,6 +123,19 @@ def parse_lines_with_component(res_components, components, line, prop):
             res_components[i][prop + '_average'] = float(words[-4])
 
 
+def parse_rdfs(rdf_file_list):
+    rdf_dict = {}
+    for file in rdf_file_list:
+        name = Path(file).stem.strip('RDF_')
+        df = pd.read_csv(file, comment='#', header=None, sep='\s+')
+        r = df.iloc[:,0].values
+        rdf = df.iloc[:,1].values
+        rdf_dict[name] = {
+            'r': r,
+            'rdf': rdf
+        }
+    return rdf_dict
+
 class RaspaParser(Parser):
     """Parser for the output of RASPA."""
 
@@ -138,6 +156,7 @@ class RaspaParser(Parser):
         self._parse_stdout(out_folder, new_nodes_list)
         return True, new_nodes_list
 
+
     # pylint: disable=too-many-locals, too-many-arguments, too-many-statements, too-many-branches
     def _parse_stdout(self, out_folder, new_nodes_list):
         fn = None
@@ -149,6 +168,7 @@ class RaspaParser(Parser):
             raise OutputParsingError(
                 "Calculation did not produce an output file. Please make sure that it run "
                 "correctly")
+
 
         res_per_component = []
         component_names = []
@@ -163,6 +183,18 @@ class RaspaParser(Parser):
         result_dict = {'exceeded_walltime': False}
         framework_density = re.compile("Framework Density:")
         num_of_molec = re.compile("Number of molecules:$")
+
+
+        if 'RadialDistributionFunctions' in fs:
+            rdf_path = out_folder.get_abs_path('RadialDistributionFunctions')
+            rdfs = glob(os.path.join(rdf_path, 'System_0', '*'))
+            if len(rdfs) > 0:
+                rdf_dict = parse_rdfs(rdfs)
+            else:
+                rdf_dict = None
+
+        result_dict['rdfs'] = rdf_dict
+
 
         with open(output_abs_path, "r") as f:
             # 1st parsing part
