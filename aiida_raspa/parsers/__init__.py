@@ -13,6 +13,7 @@ from aiida.parsers.exceptions import OutputParsingError
 import os
 from glob import glob
 import pandas as pd
+from pathlib import Path
 
 float_base = float
 

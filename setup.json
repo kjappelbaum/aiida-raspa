@@ -12,7 +12,8 @@
     "setup_requires": ["reentry"],
     "install_requires": [
         "aiida >= 0.9",
-        "pandas"
+        "pandas",
+        "pathlib"
     ],
     "entry_points": {
         "aiida.calculations": [
