@@ -12,7 +12,6 @@ from aiida.parsers.exceptions import OutputParsingError
 
 import os
 from glob import glob
-from pathlib import Path
 import pandas as pd
 
 float_base = float
@@ -252,14 +251,17 @@ class RaspaParser(Parser):
 
         result_dict['rdfs'] = rdf_dict
 
+
         with open(output_abs_path, "r") as f:
             # 1st parsing part
             icomponent = 0
             res_cmp = res_per_component[0]
+            warnings = []
             for line in f:
                 # TODO maybe change for parse_line?
                 if "WARNING" in line:
                     self.logger.warning(line)
+                    warnings.append(line.split('WARNING:')[-1])
                 if "Conversion factor molecules/unit cell -> mol/kg:" in line:
                     res_cmp['conversion_factor_molec_uc_to_mol_kg'] = float(
                         line.split()[6])
@@ -362,6 +364,7 @@ class RaspaParser(Parser):
             # end of the 4th parsing part
 
             result_dict['mc_move_statistics'] = parse_performance_mc(f)
+            result_dict['warnings'] = warnings
 
         pair = (self.get_linkname_outparams(), ParameterData(dict=result_dict))
         new_nodes_list.append(pair)
