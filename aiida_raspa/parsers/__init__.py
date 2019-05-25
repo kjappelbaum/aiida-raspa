@@ -37,7 +37,7 @@ block1_list = [
     (re.compile("Enthalpy of adsorption:"), "enthalpy_of_adsorption", (1, 4,
                                                                        3)),
     (re.compile("Tail-correction energy:$"), "tail_correction_energy", (1, 2,
-                                                                      4)),
+                                                                        4)),
 ]
 
 
@@ -128,13 +128,75 @@ def parse_rdfs(rdf_file_list):
     for file in rdf_file_list:
         name = Path(file).stem.strip('RDF_')
         df = pd.read_csv(file, comment='#', header=None, sep='\s+')
-        r = df.iloc[:,0].values
-        rdf = df.iloc[:,1].values
-        rdf_dict[name] = {
-            'r': r,
-            'rdf': rdf
-        }
+        r = df.iloc[:, 0].values
+        rdf = df.iloc[:, 1].values
+        rdf_dict[name] = {'r': r, 'rdf': rdf}
     return rdf_dict
+
+def parse_performance_line(line):
+    """
+    :param line: string in format
+        Component [tip4pew] total tried: 386.000000 succesfull growth: 3.000000 (0.777202 [%]) accepted: 3.000000 (0.777202 [%])
+        that will be parsed
+    :return:
+    """
+    parts = line.split()
+    total_tried = parts[4]
+    successfull_growth_total = parts[7]
+    successfull_growth_ratio = parts[8].strip('(')
+    accepted_total = parts[-3]
+    accepted_ratio = parts[-2].strip('(')
+    return {
+        'total_tried': int(float(total_tried)),
+        'successfull_growth_total': int(float(successfull_growth_total)),
+        'successfull_growth_ratio': float(successfull_growth_ratio),
+        'accepted_total': int(float(accepted_total)),
+        'accepted_ratio': float(accepted_ratio)
+    }
+
+def parse_performance_block(lines):
+    """
+    :param lines: list of strings in format
+        	total        1.000000 1.000000 2.000000
+            succesfull   1.000000 1.000000 1.000000
+            accepted   1.000000 1.000000 0.500000
+            displacement 0.487500 0.487500 0.325000
+    :return:
+    """
+    import numpy as np
+    totals = [int(float(i)) for i in lines[3].split()[1:]]
+    successfull = [int(float(i)) for i in lines[2].split()[1:]]
+    acceptance_ratio = [float(i) for i in lines[1].split()[1:]]
+    drift = [float(i) for i in lines[3].split()[0:]]
+    return {
+        'total': totals,
+        'successfull': successfull,
+        'acceptance_ratio': acceptance_ratio,
+        'drift': drift,
+        'acceptance_ratio_mean': np.mean(acceptance_ratio)
+    }
+
+def parse_performance_mc(f):
+    """
+    Parse for some performance metrics of the MC moves
+    :param f: file as lines
+    :return: dictionary with efficiency of MC efficiencies
+    """
+    efficiencies_dict = {}
+    # read from end for efficiency:
+    for i, line in enumerate(f[::-1]):
+        if 'Performance of the Reinsertion move:' in line:
+            efficiencies_dict['reinsertion'] = parse_performance_line(f[::-1][i-2])
+        if 'Performance of the swap deletion move:' in line:
+            efficiencies_dict['deletion'] = parse_performance_line(f[::-1][i - 2])
+        if 'Performance of the swap addition move:' in line:
+            efficiencies_dict['addition'] = parse_performance_line(f[::-1][i - 2])
+        if 'Performance of the rotation move:' in line:
+            efficiencies_dict['rotation'] = parse_performance_block(f[::-1][i-7:i-3])
+        if 'Monte-Carlo moves statistics' in line:
+            break
+
+    return efficiencies_dict
 
 class RaspaParser(Parser):
     """Parser for the output of RASPA."""
@@ -156,7 +218,6 @@ class RaspaParser(Parser):
         self._parse_stdout(out_folder, new_nodes_list)
         return True, new_nodes_list
 
-
     # pylint: disable=too-many-locals, too-many-arguments, too-many-statements, too-many-branches
     def _parse_stdout(self, out_folder, new_nodes_list):
         fn = None
@@ -168,7 +229,6 @@ class RaspaParser(Parser):
             raise OutputParsingError(
                 "Calculation did not produce an output file. Please make sure that it run "
                 "correctly")
-
 
         res_per_component = []
         component_names = []
@@ -184,17 +244,13 @@ class RaspaParser(Parser):
         framework_density = re.compile("Framework Density:")
         num_of_molec = re.compile("Number of molecules:$")
 
-
-        if 'RadialDistributionFunctions' in fs:
-            rdf_path = out_folder.get_abs_path('RadialDistributionFunctions')
-            rdfs = glob(os.path.join(rdf_path, 'System_0', '*'))
-            if len(rdfs) > 0:
-                rdf_dict = parse_rdfs(rdfs)
-            else:
-                rdf_dict = None
+        rdfs = [out_folder.get_abs_path(f) for f in fs if f.startswith('RDF')]
+        if len(rdfs) > 0:
+            rdf_dict = parse_rdfs(rdfs)
+        else:
+            rdf_dict = None
 
         result_dict['rdfs'] = rdf_dict
-
 
         with open(output_abs_path, "r") as f:
             # 1st parsing part
@@ -240,6 +296,7 @@ class RaspaParser(Parser):
                     else:
                         break
             # end of the 1st parsing part
+
 
             # 2nd parsing part
             for line in f:
@@ -303,6 +360,8 @@ class RaspaParser(Parser):
                                                    component_names, line,
                                                    to_parse[1])
             # end of the 4th parsing part
+
+            result_dict['mc_move_statistics'] = parse_performance_mc(f)
 
         pair = (self.get_linkname_outparams(), ParameterData(dict=result_dict))
         new_nodes_list.append(pair)

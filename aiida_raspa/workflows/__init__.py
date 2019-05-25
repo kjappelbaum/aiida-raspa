@@ -25,15 +25,15 @@ default_options = {
         "num_machines": 1,
         "num_mpiprocs_per_machine": 1,
     },
-    "max_wallclock_seconds": 1 * 60 * 60,
+    "max_wallclock_seconds": 3 * 60 * 60,
 }
-
 
 # pylint: disable=too-many-locals
 
+
 def get_perpendicular_width(lattice_matrix):
     """
-    From Daniele Ongari's 'manage_crystal' code.
+    From Daniele Ongari's 'manage_crystal' code (more conservative then previous diagonal elements)
     :param lattice_matrix: lattice vector matrix
     :return: list with perpendicular widths in a, b and c
     """
@@ -64,15 +64,15 @@ def get_perpendicular_width(lattice_matrix):
 
     # calculate cell perpendicular widths
     perp_width = [0.0] * 3
-    perp_width[0] = V / sqrt(bxc1 ** 2 + bxc2 ** 2 + bxc3 ** 2)
-    perp_width[1] = V / sqrt(cxa1 ** 2 + cxa2 ** 2 + cxa3 ** 2)
-    perp_width[2] = V / sqrt(axb1 ** 2 + axb2 ** 2 + axb3 ** 2)
+    perp_width[0] = V / sqrt(bxc1**2 + bxc2**2 + bxc3**2)
+    perp_width[1] = V / sqrt(cxa1**2 + cxa2**2 + cxa3**2)
+    perp_width[2] = V / sqrt(axb1**2 + axb2**2 + axb3**2)
 
     return perp_width
 
 
 def multiply_unit_cell(cif, cutoff):
-    """Resurns the multiplication factors (tuple of 3 int) for the cell vectors
+    """Returns the multiplication factors (tuple of 3 int) for the cell vectors
     that are needed to respect: min(perpendicular_width) > threshold
     """
     from math import cos, sin, sqrt, pi, ceil
@@ -102,7 +102,6 @@ def multiply_unit_cell(cif, cutoff):
     ]
     cell = np.array(cell)
 
-    # diagonalizing the cell matrix: note that the diagonal elements are the perpendicular widths because ay=az=bz=0
     perp_width = get_perpendicular_width(cell)
     multipl_length = [0] * 3
     for k in range(3):
@@ -120,16 +119,14 @@ class RaspaConvergeWorkChain(WorkChain):
         spec.input('code', valid_type=Code)
         spec.input('structure', valid_type=CifData)
         spec.input("parameters", valid_type=ParameterData)
-        spec.input(
-            'retrieved_parent_folder',
-            valid_type=FolderData,
-            default=None,
-            required=False)
-        spec.input(
-            'block_component_0',
-            valid_type=SinglefileData,
-            default=None,
-            required=False)
+        spec.input('retrieved_parent_folder',
+                   valid_type=FolderData,
+                   default=None,
+                   required=False)
+        spec.input('block_component_0',
+                   valid_type=SinglefileData,
+                   default=None,
+                   required=False)
         spec.input("_options", valid_type=dict, default=default_options)
 
         spec.outline(
@@ -155,16 +152,18 @@ class RaspaConvergeWorkChain(WorkChain):
 
         self.ctx.settings = None
 
-        # ToDo: this is not really elegant, optimize it.
+        # ToDo: this is not really elegant, optimize it
         if 'ComputeRDF' in self.ctx.parameters['GeneralSettings'].keys():
-            if self.ctx.parameters['GeneralSettings']['ComputeRDF'] in ['yes', 'YES', 'Yes']:
+            if self.ctx.parameters['GeneralSettings']['ComputeRDF'] in [
+                    'yes', 'YES', 'Yes'
+            ]:
                 self.ctx.settings = ParameterData(
-                dict={
-                    'additional_retrieve_list':
-                    ['RadialDistributionFunctions/System_0/*'],
-                })
+                    dict={
+                        'additional_retrieve_list':
+                        ['RadialDistributionFunctions/System_0/*'],
+                    })
 
-        # restard provided?
+        # restart provided?
         try:
             self.ctx.restart_calc = self.inputs.retrieved_parent_folder
         except AttributeError:
@@ -218,7 +217,7 @@ class RaspaConvergeWorkChain(WorkChain):
 
     def inspect_calculation(self):
         """
-        Analyse the results of RASPA calculation and decide weather there is a
+        Analyse the results of RASPA calculation and decide whether there is a
         need to restart it. If yes, then decide exactly how to restart the
         calculation.
         """
@@ -234,5 +233,3 @@ class RaspaConvergeWorkChain(WorkChain):
         self.out('component_0', self.ctx.calculation['component_0'])
         self.out('output_parameters',
                  self.ctx.calculation['output_parameters'])
-
-
