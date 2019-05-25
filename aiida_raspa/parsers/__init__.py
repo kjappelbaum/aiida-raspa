@@ -364,7 +364,7 @@ class RaspaParser(Parser):
                                                    to_parse[1])
             # end of the 4th parsing part
 
-            result_dict['mc_move_statistics'] = parse_performance_mc(f)
+            result_dict['mc_move_statistics'] = parse_performance_mc(f.readlines())
             result_dict['warnings'] = warnings
 
         pair = (self.get_linkname_outparams(), ParameterData(dict=result_dict))
