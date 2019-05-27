@@ -212,7 +212,7 @@ class RaspaCalculation(JobCalculation):
         if content is None:
             raise InputValidationError(
                 "Restart was requested but the restart"
-                " file was not found in the previos calculation.")
+                " file was not found in the previous calculation.")
 
         genset = params['GeneralSettings']
         (nx, ny, nz) = tuple(map(int, genset['UnitCells'].split()))

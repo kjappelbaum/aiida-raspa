@@ -10,8 +10,6 @@ from aiida.orm.data.parameter import ParameterData
 from aiida_raspa.calculations import RaspaCalculation
 from aiida.parsers.exceptions import OutputParsingError
 
-import os
-from glob import glob
 import pandas as pd
 from pathlib import Path
 
@@ -318,11 +316,11 @@ class RaspaParser(Parser):
                             else:
                                 break
 
-                        continue  # no need to perform further checks, propperty has been found already
+                        continue  # no need to perform further checks, property has been found already
                 for parse in energy_block_list:
                     if parse[0].match(line):
                         parse_block_energy(f, result_dict, prop=parse[1])
-                        continue  # no need to perform further checks, propperty has been found already
+                        continue  # no need to perform further checks, property has been found already
                 if framework_density.match(line) is not None:
                     result_dict['framework_density'] = line.split()[2]
                     result_dict['framework_density_units'] = line.split(
@@ -364,7 +362,7 @@ class RaspaParser(Parser):
                                                    to_parse[1])
             # end of the 4th parsing part
 
-            result_dict['mc_move_statistics'] = parse_performance_mc(f.readlines())
+            result_dict['mc_move_statistics'] = parse_performance_mc(f)
             result_dict['warnings'] = warnings
 
         pair = (self.get_linkname_outparams(), ParameterData(dict=result_dict))

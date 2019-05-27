@@ -167,6 +167,7 @@ class RaspaConvergeWorkChain(WorkChain):
         try:
             self.ctx.restart_calc = self.inputs.retrieved_parent_folder
         except AttributeError:
+            self.report('Could not use restart')
             self.ctx.restart_calc = None
 
         # block pockets provided?
