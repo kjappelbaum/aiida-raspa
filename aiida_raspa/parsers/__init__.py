@@ -164,10 +164,10 @@ def parse_performance_block(lines):
     :return:
     """
     import numpy as np
-    totals = [int(float(i)) for i in lines[3].split()[1:]]
-    successfull = [int(float(i)) for i in lines[2].split()[1:]]
-    acceptance_ratio = [float(i) for i in lines[1].split()[1:]]
-    drift = [float(i) for i in lines[0].split()[0:]]
+    totals = [int(float(i)) for i in lines[4].split()[1:]]
+    successfull = [int(float(i)) for i in lines[3].split()[1:]]
+    acceptance_ratio = [float(i) for i in lines[2].split()[1:]]
+    drift = [float(i) for i in lines[1].split()[1:]]
     return {
         'total': totals,
         'successfull': successfull,
@@ -197,7 +197,12 @@ def parse_performance_mc(f):
                                                                            2])
         if 'Performance of the rotation move:' in line:
             efficiencies_dict['rotation'] = parse_performance_block(
-                f[::-1][i - 7:i - 3])
+                f[::-1][i - 7:i - 2])
+
+        if 'Performance of the translation move:' in line:
+            efficiencies_dict['translation'] = parse_performance_block(
+                    f[::-1][i - 7:i - 2])
+
         if 'Monte-Carlo moves statistics' in line:
             break
 
