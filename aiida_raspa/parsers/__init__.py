@@ -131,6 +131,7 @@ def parse_rdfs(rdf_file_list):
         rdf_dict[name] = {'r': r, 'rdf': rdf}
     return rdf_dict
 
+
 def parse_performance_line(line):
     """
     :param line: string in format
@@ -152,6 +153,7 @@ def parse_performance_line(line):
         'accepted_ratio': float(accepted_ratio)
     }
 
+
 def parse_performance_block(lines):
     """
     :param lines: list of strings in format
@@ -165,7 +167,7 @@ def parse_performance_block(lines):
     totals = [int(float(i)) for i in lines[3].split()[1:]]
     successfull = [int(float(i)) for i in lines[2].split()[1:]]
     acceptance_ratio = [float(i) for i in lines[1].split()[1:]]
-    drift = [float(i) for i in lines[3].split()[0:]]
+    drift = [float(i) for i in lines[0].split()[0:]]
     return {
         'total': totals,
         'successfull': successfull,
@@ -173,6 +175,7 @@ def parse_performance_block(lines):
         'drift': drift,
         'acceptance_ratio_mean': np.mean(acceptance_ratio)
     }
+
 
 def parse_performance_mc(f):
     """
@@ -184,17 +187,22 @@ def parse_performance_mc(f):
     # read from end for efficiency:
     for i, line in enumerate(f[::-1]):
         if 'Performance of the Reinsertion move:' in line:
-            efficiencies_dict['reinsertion'] = parse_performance_line(f[::-1][i-2])
+            efficiencies_dict['reinsertion'] = parse_performance_line(
+                f[::-1][i - 2])
         if 'Performance of the swap deletion move:' in line:
-            efficiencies_dict['deletion'] = parse_performance_line(f[::-1][i - 2])
+            efficiencies_dict['deletion'] = parse_performance_line(f[::-1][i -
+                                                                           2])
         if 'Performance of the swap addition move:' in line:
-            efficiencies_dict['addition'] = parse_performance_line(f[::-1][i - 2])
+            efficiencies_dict['addition'] = parse_performance_line(f[::-1][i -
+                                                                           2])
         if 'Performance of the rotation move:' in line:
-            efficiencies_dict['rotation'] = parse_performance_block(f[::-1][i-7:i-3])
+            efficiencies_dict['rotation'] = parse_performance_block(
+                f[::-1][i - 7:i - 3])
         if 'Monte-Carlo moves statistics' in line:
             break
 
     return efficiencies_dict
+
 
 class RaspaParser(Parser):
     """Parser for the output of RASPA."""
@@ -250,7 +258,6 @@ class RaspaParser(Parser):
 
         result_dict['rdfs'] = rdf_dict
 
-
         with open(output_abs_path, "r") as f:
             # 1st parsing part
             icomponent = 0
@@ -297,7 +304,6 @@ class RaspaParser(Parser):
                     else:
                         break
             # end of the 1st parsing part
-
 
             # 2nd parsing part
             for line in f:
@@ -362,7 +368,8 @@ class RaspaParser(Parser):
                                                    to_parse[1])
             # end of the 4th parsing part
 
-            result_dict['mc_move_statistics'] = parse_performance_mc(f)
+            result_dict['mc_move_statistics'] = parse_performance_mc(
+                f.readlines())
             result_dict['warnings'] = warnings
 
         pair = (self.get_linkname_outparams(), ParameterData(dict=result_dict))
