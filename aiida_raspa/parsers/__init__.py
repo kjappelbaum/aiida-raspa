@@ -376,8 +376,8 @@ class RaspaParser(Parser):
             result_dict['warnings'] = warnings
 
         with open(output_abs_path, "r") as f:
-            result_dict['mc_move_statistics'] = parse_performance_mc(
-                f.readlines())
+            mc_performance = parse_performance_mc(f.readlines())
+            result_dict['mc_move_statistics'] = mc_performance
 
         pair = (self.get_linkname_outparams(), ParameterData(dict=result_dict))
         new_nodes_list.append(pair)
