@@ -201,7 +201,7 @@ def parse_performance_mc(f):
 
         if 'Performance of the translation move:' in line:
             efficiencies_dict['translation'] = parse_performance_block(
-                    f[::-1][i - 7:i - 2])
+                f[::-1][i - 7:i - 2])
 
         if 'Monte-Carlo moves statistics' in line:
             break
@@ -373,9 +373,11 @@ class RaspaParser(Parser):
                                                    to_parse[1])
             # end of the 4th parsing part
 
+            result_dict['warnings'] = warnings
+
+        with open(output_abs_path, "r") as f:
             result_dict['mc_move_statistics'] = parse_performance_mc(
                 f.readlines())
-            result_dict['warnings'] = warnings
 
         pair = (self.get_linkname_outparams(), ParameterData(dict=result_dict))
         new_nodes_list.append(pair)
