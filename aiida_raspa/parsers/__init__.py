@@ -139,19 +139,22 @@ def parse_performance_line(line):
         that will be parsed
     :return:
     """
-    parts = line.split()
-    total_tried = parts[4]
-    successfull_growth_total = parts[7]
-    successfull_growth_ratio = parts[8].strip('(')
-    accepted_total = parts[-3]
-    accepted_ratio = parts[-2].strip('(')
-    return {
-        'total_tried': int(float(total_tried)),
-        'successfull_growth_total': int(float(successfull_growth_total)),
-        'successfull_growth_ratio': float(successfull_growth_ratio),
-        'accepted_total': int(float(accepted_total)),
-        'accepted_ratio': float(accepted_ratio)
-    }
+    try:
+        parts = line.split()
+        total_tried = parts[4]
+        successfull_growth_total = parts[7]
+        successfull_growth_ratio = parts[8].strip('(')
+        accepted_total = parts[-3]
+        accepted_ratio = parts[-2].strip('(')
+        return {
+            'total_tried': int(float(total_tried)),
+            'successfull_growth_total': int(float(successfull_growth_total)),
+            'successfull_growth_ratio': float(successfull_growth_ratio),
+            'accepted_total': int(float(accepted_total)),
+            'accepted_ratio': float(accepted_ratio)
+        }
+    except Exception:
+        return {}
 
 
 def parse_performance_block(lines):
@@ -164,17 +167,20 @@ def parse_performance_block(lines):
     :return:
     """
     import numpy as np
-    totals = [int(float(i)) for i in lines[4].split()[1:]]
-    successfull = [int(float(i)) for i in lines[3].split()[1:]]
-    acceptance_ratio = [float(i) for i in lines[2].split()[1:]]
-    drift = [float(i) for i in lines[1].split()[1:]]
-    return {
-        'total': totals,
-        'successfull': successfull,
-        'acceptance_ratio': acceptance_ratio,
-        'drift': drift,
-        'acceptance_ratio_mean': np.mean(acceptance_ratio)
-    }
+    try:
+        totals = [int(float(i)) for i in lines[4].split()[1:]]
+        successfull = [int(float(i)) for i in lines[3].split()[1:]]
+        acceptance_ratio = [float(i) for i in lines[2].split()[1:]]
+        drift = [float(i) for i in lines[1].split()[1:]]
+        return {
+            'total': totals,
+            'successfull': successfull,
+            'acceptance_ratio': acceptance_ratio,
+            'drift': drift,
+            'acceptance_ratio_mean': np.mean(acceptance_ratio)
+        }
+    except Exception:
+        retrun {}
 
 
 def parse_performance_mc(f):
@@ -186,7 +192,7 @@ def parse_performance_mc(f):
     efficiencies_dict = {}
     # read from end for efficiency:
     for i, line in enumerate(f[::-1]):
-        if ('Performance of the Reinsertion move:' in line) and  ('OFF' not in line):
+        if ('Performance of the Reinsertion move:' in line) and ('OFF' not in line):
             efficiencies_dict['reinsertion'] = parse_performance_line(
                 f[::-1][i - 2])
         if ('Performance of the swap deletion move:' in line) and ('OFF' not in line):
