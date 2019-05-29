@@ -186,20 +186,20 @@ def parse_performance_mc(f):
     efficiencies_dict = {}
     # read from end for efficiency:
     for i, line in enumerate(f[::-1]):
-        if 'Performance of the Reinsertion move:' in line:
+        if ('Performance of the Reinsertion move:' in line) and  ('OFF' not in line):
             efficiencies_dict['reinsertion'] = parse_performance_line(
                 f[::-1][i - 2])
-        if 'Performance of the swap deletion move:' in line:
+        if ('Performance of the swap deletion move:' in line) and ('OFF' not in line):
             efficiencies_dict['deletion'] = parse_performance_line(f[::-1][i -
                                                                            2])
-        if 'Performance of the swap addition move:' in line:
+        if ('Performance of the swap addition move:' in line) and ('OFF' not in line):
             efficiencies_dict['addition'] = parse_performance_line(f[::-1][i -
                                                                            2])
-        if 'Performance of the rotation move:' in line:
+        if ('Performance of the rotation move:' in line)  and ('OFF' not in line):
             efficiencies_dict['rotation'] = parse_performance_block(
                 f[::-1][i - 7:i - 2])
 
-        if 'Performance of the translation move:' in line:
+        if ('Performance of the translation move:' in line) and ('OFF' not in line):
             efficiencies_dict['translation'] = parse_performance_block(
                 f[::-1][i - 7:i - 2])
 
