@@ -180,7 +180,7 @@ def parse_performance_block(lines):
             'acceptance_ratio_mean': np.mean(acceptance_ratio)
         }
     except Exception:
-        retrun {}
+        return {}
 
 
 def parse_performance_mc(f):
