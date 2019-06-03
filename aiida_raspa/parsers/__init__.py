@@ -126,8 +126,8 @@ def parse_rdfs(rdf_file_list):
     for file in rdf_file_list:
         name = Path(file).stem.strip('RDF_')
         df = pd.read_csv(file, comment='#', header=None, sep='\s+')
-        r = df.iloc[:, 0].values
-        rdf = df.iloc[:, 1].values
+        r = df.iloc[:, 1].values
+        rdf = df.iloc[:, 2].values
         rdf_dict[name] = {'r': r, 'rdf': rdf}
     return rdf_dict
 
